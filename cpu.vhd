@@ -1,0 +1,140 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
+
+ENTITY cpu IS
+	GENERIC (
+		DATA_WIDTH : INTEGER := 16;
+		ADDR_WIDTH : INTEGER := 4
+	);
+	PORT (
+		clk : IN STD_LOGIC;
+		reset : IN STD_LOGIC;
+
+		address_cpu : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+
+		Mre_cpu : OUT STD_LOGIC;
+		Mwe_cpu : OUT STD_LOGIC;
+
+		data_out : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+		data_in : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0)
+	);
+
+END cpu;
+
+ARCHITECTURE behav OF cpu IS
+	COMPONENT control_unit
+		GENERIC (ADDR_WIDTH : INTEGER := 4);
+		PORT (
+			reset : IN STD_LOGIC;
+			clk : IN STD_LOGIC;
+			ALUz, ALUeq, ALUgt : IN STD_LOGIC;
+			addr_in : IN STD_LOGIC_VECTOR(16 - 1 DOWNTO 0);
+			ir_data_in : IN STD_LOGIC_VECTOR(16 - 1 DOWNTO 0);
+
+			RFs : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+			RFwa : OUT STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
+			RFwe : OUT STD_LOGIC;
+			OPr1a : OUT STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
+			OPr1e : OUT STD_LOGIC;
+			OPr2a : OUT STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
+			OPr2e : OUT STD_LOGIC;
+			ALUs : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+
+			ADDR : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+
+			Mre_cu : OUT STD_LOGIC;
+			Mwe_cu : OUT STD_LOGIC;
+
+			imm : OUT STD_LOGIC_VECTOR(8 - 1 DOWNTO 0);
+			op : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+		);
+	END COMPONENT;
+
+	COMPONENT datapath
+		GENERIC (
+			DATA_WIDTH : INTEGER := 16;
+			ADDR_WIDTH : INTEGER := 4
+		);
+		PORT (
+			rst : IN STD_LOGIC;
+			clk : IN STD_LOGIC;
+			imm : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+			data_in_mux2 : IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+			RFs : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+			ALUs : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+			ALUz : OUT STD_LOGIC;
+			ALUeq : OUT STD_LOGIC;
+			ALUgt : OUT STD_LOGIC;
+
+			RFwa : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+			RFwe : IN STD_LOGIC;
+			OPr1a : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+			OPr1e : IN STD_LOGIC;
+			OPr2a : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+			OPr2e : IN STD_LOGIC;
+			add_out : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+			data_out : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0)
+		);
+	END COMPONENT;
+
+	COMPONENT dpmem
+		GENERIC (
+			DATA_WIDTH : INTEGER := 16;
+			ADDR_WIDTH : INTEGER := 16
+		);
+
+		PORT (
+			Clk : IN STD_LOGIC;
+			Reset : IN STD_LOGIC;
+			addr : IN STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
+			Wen : IN STD_LOGIC;
+			Datain : IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0) := (OTHERS => '0');
+			Ren : IN STD_LOGIC;
+			Dataout : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0)
+		);
+	END COMPONENT;
+
+	SIGNAL address : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	SIGNAL imm : STD_LOGIC_VECTOR(7 DOWNTO 0);
+	SIGNAL OPr2 : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	SIGNAL Mre : STD_LOGIC;
+	SIGNAL Mwe : STD_LOGIC;
+	SIGNAL data_out_mem : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	SIGNAL data_in_mem : STD_LOGIC_VECTOR(15 DOWNTO 0);
+
+	SIGNAL RFs : STD_LOGIC_VECTOR(1 DOWNTO 0);
+	SIGNAL RFwa : STD_LOGIC_VECTOR(4 - 1 DOWNTO 0);
+	SIGNAL RFwe : STD_LOGIC;
+
+	SIGNAL OPr1a : STD_LOGIC_VECTOR(4 - 1 DOWNTO 0);
+	SIGNAL OPr1e : STD_LOGIC;
+	SIGNAL OPr2a : STD_LOGIC_VECTOR(4 - 1 DOWNTO 0);
+	SIGNAL OPr2e : STD_LOGIC;
+	SIGNAL ALUs : STD_LOGIC_VECTOR(1 DOWNTO 0);
+	SIGNAL ALUz : STD_LOGIC;
+	SIGNAL ALUeq : STD_LOGIC;
+	SIGNAL ALUgt : STD_LOGIC;
+
+	SIGNAL op : STD_LOGIC_VECTOR(3 DOWNTO 0);
+
+BEGIN
+	ctrl : ENTITY work.control_unit
+		PORT MAP(
+			reset, clk, ALUz, ALUeq, ALUgt, OPr2, data_out_mem, RFs, RFwa,
+			RFwe, OPr1a, OPr1e, Opr2a, OPr2e, ALUs, address, Mre, Mwe, imm, op);
+
+	data : datapath
+	PORT MAP(
+		reset, clk, imm, data_out_mem, RFs, ALUs, ALUz, ALUeq, ALUgt, RFwa, RFwe,
+		OPr1a, OPr1e, Opr2a, OPr2e, OPr2, data_in_mem);
+
+	mem : dpmem
+	PORT MAP(clk, reset, address, Mwe, data_in_mem, Mre, data_out_mem);
+	address_cpu <= address;
+	Mre_cpu <= Mre;
+	Mwe_cpu <= Mwe;
+
+	data_out <= data_out_mem;
+	data_in <= data_in_mem;
+END behav;
