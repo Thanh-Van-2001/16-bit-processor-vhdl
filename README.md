@@ -24,7 +24,11 @@
   * X"1164",   -- mov2 M(64(hex)) = RF(1);  
   * X"6302",   --jz RF(3) 
   * X"9003",   --jmp rn =9  addr = 3 
-    
+
+## FSM state machine model of the controller:
+
+![Capture](https://user-images.githubusercontent.com/81580234/151125168-e683a38e-489b-4e2a-8d62-3453b8f253ac.PNG)
+
 ## Our team
 * Thanh V.Nguyen
 * Tuyen M.Vu
