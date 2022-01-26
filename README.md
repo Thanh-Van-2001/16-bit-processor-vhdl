@@ -35,3 +35,4 @@
 
 ## References
 * Blog: [Design RTL 16 bit Stem Education](https://dayhocstem.com/blog/2020/02/thiet-ke-muc-rtl-cua-bo-vi-xu-ly-16-bit.html)
+* ResearchGate:[RTL formal verification of embedded processors](https://www.researchgate.net/publication/4009295_RTL_formal_verification_of_embedded_processors)
