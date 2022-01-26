@@ -32,3 +32,6 @@
 ## Our team
 * Thanh V.Nguyen
 * Tuyen M.Vu
+
+## References
+* Blog: [Design RTL 16 bit Stem Education](https://dayhocstem.com/blog/2020/02/thiet-ke-muc-rtl-cua-bo-vi-xu-ly-16-bit.html)
